@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Flux RSS suivis par l'application
+model Feed {
+  id            String    @id @default(cuid())
+  url           String    @unique
+  title         String
+  siteUrl       String?
+  description   String?
+  category      String
+  language      String?
+  active        Boolean   @default(true)
+  lastFetchedAt DateTime?
+  lastError     String?
+  errorCount    Int       @default(0)
+  itemCount     Int       @default(0)
+  createdAt     DateTime  @default(now())
+  articles      Article[]
+}
+
+// Article agrégé depuis un flux
+model Article {
+  id          String   @id @default(cuid())
+  feedId      String
+  feed        Feed     @relation(fields: [feedId], references: [id], onDelete: Cascade)
+  guid        String
+  title       String
+  link        String?
+  summary     String?
+  content     String?
+  author      String?
+  publishedAt DateTime @default(now())
+  image       String?
+  createdAt   DateTime @default(now())
+
+  @@unique([feedId, guid])
+  @@index([publishedAt])
+  @@index([feedId, publishedAt])
+  @@index([feedId, guid])
+}
